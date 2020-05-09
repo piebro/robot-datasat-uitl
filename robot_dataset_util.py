@@ -169,35 +169,9 @@ def get_dataset(dataset_folder, kaggle_api_token_path):
   kaggle.api.authenticate()
   os.environ['KAGGLE_USERNAME'] = ""
   os.environ['KAGGLE_KEY'] = ""
+  print("start downloading dataset")
   kaggle.api.dataset_download_files('pietbroemmel/naodevils-segmentation-upper-camera', path=dataset_folder, unzip=True)
-
-
-  image_sub_folders = ["upper_0_500", "upper_500_1000", "upper_1000_1500", "upper_1500_2000"]
-  img_root_path = os.path.join(dataset_folder, "images")
-
-  all_images_path = os.path.join(dataset_folder, "all_images")
-  os.mkdir(all_images_path)
-
-  for imgage_sub_folder in image_sub_folders:
-    sub_folder_path = os.path.join(img_root_path, imgage_sub_folder)
-    for file_path in glob.glob(os.path.join(sub_folder_path, '*.*')):
-      shutil.move(file_path, all_images_path)
-
-  json_filenames = ["upper_0_500.json", "upper_500_1000.json", "upper_1000_1500.json"]
-  annotations_path = os.path.join(dataset_folder, "annotations")
-  json_paths = []
-  for json_filename in json_filenames:
-    json_paths.append(os.path.join(annotations_path, json_filename))
-
-  all_annotations_path = os.path.join(dataset_folder, "all_annotations.json")
-  save_combined_annotation_json(json_paths, all_annotations_path)
-  save_non_overlapping_annotations_json(all_annotations_path, all_annotations_path)
-
-  save_train_val_annotations_json(
-      all_annotations_path,
-      os.path.join(dataset_folder, "annotations_train.json"),
-      os.path.join(dataset_folder, "annotations_val.json"),
-      val_size=0.2)
+  print("finished download")
 
 
 def save_certain_categories(json_path, save_json_path, categorie_mapping):
