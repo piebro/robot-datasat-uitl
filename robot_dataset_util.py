@@ -1,7 +1,6 @@
 import os
 import shutil
 import json
-import glob
 import sys
 
 import cv2
@@ -118,6 +117,8 @@ def save_non_overlapping_annotations_json(json_path, save_json_path):
       
       sys.stdout.write('\rremoved overlapping for '+str(img_count+1)+' / '+str(len(coco.imgs.keys()))+' images')
       sys.stdout.flush()
+  
+  print("")
     
   coco_json_new["annotations"] = new_annotations
   with open(save_json_path, 'w') as outfile:
@@ -169,7 +170,7 @@ def get_dataset(dataset_folder, kaggle_api_token_path):
   kaggle.api.authenticate()
   os.environ['KAGGLE_USERNAME'] = ""
   os.environ['KAGGLE_KEY'] = ""
-  print("start downloading dataset")
+  print(" downloading dataset")
   kaggle.api.dataset_download_files('pietbroemmel/naodevils-segmentation-upper-camera', path=dataset_folder, unzip=True)
   print("finished download")
 
@@ -314,7 +315,7 @@ def annotations_from_mask_instance_segmentation(class_ids, masks):
 
 
 def get_not_annoteted_images(all_manual_annotated_json, img_dir):
-  all_images = os.listdir(img_dir)
+  all_images = [f for f in listdir(img_dir) if isfile(join(img_dir, f))]
   with open(all_manual_annotated_json) as json_file:
     manual_json = json.load(json_file)
   
