@@ -314,8 +314,8 @@ def annotations_from_mask_instance_segmentation(class_ids, masks):
   return annotations
 
 
-def get_not_annoteted_images(all_manual_annotated_json, img_dir):
-  all_images = [f for f in listdir(img_dir) if isfile(join(img_dir, f))]
+def get_not_annotated_images(all_manual_annotated_json, img_dir):
+  all_images = [f for f in os.listdir(img_dir) if os.path.isfile(os.path.join(img_dir, f))]
   with open(all_manual_annotated_json) as json_file:
     manual_json = json.load(json_file)
   
@@ -355,7 +355,7 @@ def filename_annotations_list_to_coco_json(filename_annotations_list, categories
 
 
 def save_predicted_coco_json(img_dir, all_manual_annotated_json, automatic_annotated_json, get_annotation_func, categories):
-  img_to_annotate = get_not_annoteted_images(all_manual_annotated_json, img_dir)
+  img_to_annotate = get_not_annotated_images(all_manual_annotated_json, img_dir)
 
   filename_annotations = []
   for i, img_filename in enumerate(img_to_annotate):
