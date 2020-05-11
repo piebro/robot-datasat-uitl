@@ -10,22 +10,45 @@ from pycocotools.coco import COCO
 import matplotlib.pyplot as plt
 
 
-def save_combined_annotation_json(json_paths, output_json_path):
-  new_annotation_data = {
-      "images":[],
-      "categories":[],
-      "annotations":[]
-  }
+def save_combined_annotation_json(coco_json_paths, output_json_path, new_categories):
+  filename_to_annotations = {}
 
-  for json_path in json_paths:
-    with open(json_path) as json_file:
-      data = json.load(json_file)
-      new_annotation_data["images"].extend(data["images"])
-      new_annotation_data["categories"] = data["categories"]
-      new_annotation_data["annotations"].extend(data["annotations"])
+  for coco_json in coco_json_paths:
+    coco = COCO(coco_json)
 
+    id_to_new_id = {}
+    for cat_id in coco.getCatIds():
+      cat_data = coco.loadCats(cat_id)[0]
+      new_cat_id = new_categories.index(cat_data["name"]) + 1
+      id_to_new_id[cat_id] = new_cat_id
+
+    for img_id in coco.imgs.keys():
+      annotations = []
+      for ann_old in coco.loadAnns(coco.getAnnIds(img_id)):
+        annotation = {
+          "category_id": id_to_new_id[ann_old["category_id"]],
+          "segmentation": ann_old["segmentation"],
+          "bbox": ann_old["bbox"],
+        }
+        annotations.append(annotation)
+      
+      filename = coco.loadImgs(img_id)[0]["file_name"]
+      
+      if filename in filename_to_annotations:
+        filename_to_annotations[filename].extend(annotations)
+      else:
+        filename_to_annotations[filename] = annotations
+
+  filename_annotations = []
+  for filename, annotations in filename_to_annotations.items():
+    filename_annotations.append({
+      "filename": filename,
+      "annotations": annotations
+    })
+
+  coco_json = filename_annotations_list_to_coco_json(filename_annotations, new_categories)
   with open(output_json_path, 'w') as outfile:
-    json.dump(new_annotation_data, outfile)
+    json.dump(coco_json, outfile)
 
 
 def get_mask_handle_occlusion(annotation, height, width):
@@ -263,7 +286,9 @@ def show_img_from_coco_json(img_dir, coco_json, class_id_to_color, img_count, fi
   img_array = []
   for img_id in img_ids:
     img_data = coco.loadImgs(int(img_id))[0]
-    img = cv2.imread(os.path.join(img_dir, img_data["file_name"]))
+    img_path = os.path.join(img_dir, img_data["file_name"])
+    assert(os.path.isfile(img_path)) # 
+    img = cv2.imread(img_path)
     mask = get_mask_segmentation(coco.loadAnns(coco.getAnnIds(img_id)), 640, 480)
     cmask = get_colored_segmentation_mask(mask, class_id_to_color)
     img_array.append([img_data["file_name"], img])
