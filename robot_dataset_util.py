@@ -379,8 +379,7 @@ def filename_annotations_list_to_coco_json(filename_annotations_list, categories
   }
 
 
-def save_predicted_coco_json(img_dir, all_manual_annotated_json, automatic_annotated_json, get_annotation_func, categories):
-  img_to_annotate = get_not_annotated_images(all_manual_annotated_json, img_dir)
+def save_predicted_coco_json(img_dir, img_to_annotate, automatic_annotated_json, get_annotation_func, categories):
 
   filename_annotations = []
   for i, img_filename in enumerate(img_to_annotate):
