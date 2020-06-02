@@ -419,8 +419,8 @@ def split_annotations_per_games(json_path, annotations_folder):
               "annotations": []
             }
     
-      new_jsons[game_name]["images"].append(img_data)
-      new_jsons[game_name]["annotations"].extend(coco.loadAnns(coco.getAnnIds(img_id)))
+        new_jsons[game_name]["images"].append(img_data)
+        new_jsons[game_name]["annotations"].extend(coco.loadAnns(coco.getAnnIds(img_id)))
 
     for key, value in new_jsons.items():
         save_json_path = os.path.join(annotations_folder, key + ".json")
