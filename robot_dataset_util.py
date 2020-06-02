@@ -396,7 +396,66 @@ def save_predicted_coco_json(img_dir, img_to_annotate, automatic_annotated_json,
   with open(automatic_annotated_json, 'w') as outfile:
     json.dump(coco_json, outfile)
 
+def split_annotations_per_games(json_path, annotations_folder):
+    if os.path.isdir(annotations_folder) and len(os.listdir(annotations_folder)) != 0:
+        print("The dataset folder is not empty")
+        return
+    os.mkdir(annotations_folder)
+  
+    coco = COCO(json_path)
+    with open(json_path) as json_file:
+        coco_json = json.load(json_file)
 
+    new_jsons = {}
+
+    for img_id in coco.imgs.keys():
+        img_data = coco.loadImgs(img_id)[0]
+        filename = img_data["file_name"]
+        game_name = "_".join(filename.split("_")[1:3])
+        if game_name not in new_jsons:
+            new_jsons[game_name] = {
+              "categories": coco_json["categories"],
+              "images": [],
+              "annotations": []
+            }
+    
+    new_jsons[game_name]["images"].append(img_data)
+    new_jsons[game_name]["annotations"].extend(coco.loadAnns(coco.getAnnIds(img_id)))
+
+    for key, value in new_jsons.items():
+        save_json_path = os.path.join(annotations_folder, key + ".json")
+        print("saved", key, "at", save_json_path, "with", len(value["images"]), "images and", len(value["annotations"]), "annotations")
+        with open(save_json_path, 'w') as outfile:
+            json.dump(value, outfile)
+
+
+def analyse_annotations(json_path):
+    info = {}
+    info["file_path"] = json_path
+    coco = COCO(json_path)
+    img_ids = coco.imgs.keys()
+    info["image_count"] = len(img_ids)
+    anns_ids = coco.anns.keys()
+    info["annotation_count"] = len(anns_ids)
+
+    cat_id_to_name = {}
+    for _, cat in coco.cats.items():
+        cat_id_to_name[cat['id']] = cat['name']
+
+    cat_counts = {}
+    for ann_id in anns_ids:
+        cat_id = coco.anns[ann_id]["category_id"]
+        if cat_id not in cat_counts:
+            cat_counts[cat_id] = 0
+        else:
+            cat_counts[cat_id] += 1
+
+    for cat_id, count in cat_counts.items():
+        cat_name = cat_id_to_name[cat_id]
+        info[cat_name + "_counts"] = count
+        info[cat_name + "_counts_percent"] = round(count/info["annotation_count"]*100)/100
+  
+    return info
 
 
 
