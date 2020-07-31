@@ -23,7 +23,7 @@ class CustomExecutor:
         pass
     
     @staticmethod
-    def map(executer_object, fun, params):
+    def map(fun, params):
         results = []
         for param in params:
             results.append(fun(param))
