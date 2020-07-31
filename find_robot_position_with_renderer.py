@@ -22,6 +22,7 @@ class CustomExecutor:
     def __exit__(self, type, value, traceback):
         pass
     
+    @staticmethod
     def map(executer_object, fun, params):
         results = []
         for param in params:
