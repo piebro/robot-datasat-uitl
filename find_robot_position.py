@@ -39,12 +39,14 @@ def get_position_of_mask_with_keypoints_and_search(annotations, loss, num_of_opt
     bost_loss = search_robot_positions_and_loss[0,1]
 
     if verbose > 0:
+        class_id_to_color = [[0, 0, 0], [255,0,0], [0,255,0], [0,0,255], [122,122,0], [0,122,122], [122,0,122], [255,122,122], [122,255,122], [122,122,255]]
+
         init_robot_view = render_robot_position.get_robot_position_rendered_rgb_image(init_robot_pos, 110)
         init_robot_diff = render_robot_position.get_diff_visualisation(mask, render_robot_position.rgb_mask_to_label_mask(init_robot_view, class_id_to_color))
 
         best_robot_view = render_robot_position.get_robot_position_rendered_rgb_image(best_robot_pos, 110)
         best_robot_diff = render_robot_position.get_diff_visualisation(mask, render_robot_position.rgb_mask_to_label_mask(best_robot_view, class_id_to_color))
-        class_id_to_color = [[0, 0, 0], [255,0,0], [0,255,0], [0,0,255], [122,122,0], [0,122,122], [122,0,122], [255,122,122], [122,255,122], [122,122,255]]
+
         img_array = [
             ["cmask", util.get_colored_segmentation_mask(mask, class_id_to_color)],
             ["cmask", util.get_colored_segmentation_mask(mask, class_id_to_color)],
