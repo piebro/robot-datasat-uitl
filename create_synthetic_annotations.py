@@ -56,7 +56,7 @@ def save_syntetic_dataset(save_path, num_of_samples):
     with open(save_path, 'w') as f:   
         json.dump(pos_and_anns, f)
 
-def view_position_and_mask_annotation_dataset(dataset_path, num_of_images):
+def view_position_and_mask_annotation_dataset(dataset_path, num_of_images, fig_size=8):
     with open(dataset_path) as f:
         pos_and_anns = np.array(json.load(f))
     
@@ -72,7 +72,7 @@ def view_position_and_mask_annotation_dataset(dataset_path, num_of_images):
         img_array.append([pos_str, mask_rgb])
         img_array.append(["position", render_robot_position.get_robot_pos_drawing([robot_position.RobotPosition(*pos)],[[0,0,255]])])
     
-    util.get_figure_of_images(img_array, 2, int(len(img_array)/2), 10)
+    util.get_figure_of_images(img_array, 2, int(len(img_array)/2), fig_size)
 
 def comibine_datasets(dataset_paths, save_path):
     pos_and_anns = []
