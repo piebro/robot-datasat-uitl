@@ -36,7 +36,7 @@ def get_position_of_mask_with_keypoints_and_search(annotations, loss, num_of_opt
         mask, init_robot_pos, domain, loss, num_of_optimizing_steps, batchsize, rendered_line_width, verbose)
 
     best_robot_pos = search_robot_positions_and_loss[0,0]
-    bost_loss = search_robot_positions_and_loss[0,1]
+    best_loss = search_robot_positions_and_loss[0,1]
 
     if verbose > 0:
         class_id_to_color = [[0, 0, 0], [255,0,0], [0,255,0], [0,0,255], [122,122,0], [0,122,122], [122,0,122], [255,122,122], [122,255,122], [122,122,255]]
@@ -61,6 +61,6 @@ def get_position_of_mask_with_keypoints_and_search(annotations, loss, num_of_opt
             ["best_robot_top_view", render_robot_position.get_robot_pos_drawing([best_robot_pos], [[0, 0, 255]])],
         ]
         fig = util.get_figure_of_images(img_array, 3, 3, 10)
-        return best_robot_pos, bost_loss, fig
+        return best_robot_pos, best_loss, fig
 
-    return best_robot_pos, bost_loss
+    return best_robot_pos, best_loss

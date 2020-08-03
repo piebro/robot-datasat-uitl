@@ -1,13 +1,15 @@
 from timeit import default_timer
 import os
+import sys
 
 import numpy as np
 from matplotlib import cm as colormap
 import pandas as pd
 
 from field_dimension import FieldDimensions
-from render_robot_position import get_robot_pos_drawing, get_robot_position_rendered_rgb_image, rgb_mask_to_label_mask
+from render_robot_position import get_robot_pos_drawing, get_robot_position_rendered_rgb_image, rgb_mask_to_label_mask, get_diff_visualisation
 from robot_position import RobotPosition, add_robot_postions
+import robot_dataset_util as util
 
 import blackbox as bb
 
@@ -108,3 +110,60 @@ def get_robot_position_optimize_renderer(gt_label_mask, init_robot_position, dom
         print("best loss at:", search_robot_positions_and_loss[0,1])
     
     return search_robot_positions_and_loss
+
+def get_robot_position_optimize_renderer_grid_search(gt_label_mask, domain, loss_func, rendered_line_width = 110, verbose=0):
+    fd = FieldDimensions()
+    init_robot_pos = RobotPosition(
+        x=fd.border_strip_width + fd.field_x*2/4, y=fd.border_strip_width + fd.field_y*3/4, rot_left_right_torso=180, rot_left_right_head=0, rot_top_down=65, rot_clockwise=0)
+
+    domain_values = []
+    for _, value in domain.items():
+        if isinstance(value, list):
+            dx = (value[1]-value[0])/(value[2])
+            domain_values.append(np.arange(value[0]+dx/2, value[1], dx))
+        else:
+            domain_values.append(np.array([value]))
+
+    all_combinations = np.stack(np.meshgrid(*domain_values), -1).reshape(-1, len(domain_values))
+    if verbose > 0:
+        print("there are ", len(all_combinations), "combinations")
+    
+    results = []
+    for i, combination in enumerate(all_combinations):
+        diff_robot_pos = RobotPosition(*combination)
+        robot_pos = add_robot_postions(init_robot_pos, diff_robot_pos)
+        rendered_rgb_image = get_robot_position_rendered_rgb_image(robot_pos, rendered_line_width)
+        class_id_to_color = [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [122, 122, 0], [0, 122, 122], [122, 0, 122]]
+        rendered_label_mask = rgb_mask_to_label_mask(rendered_rgb_image, class_id_to_color)
+        loss = loss_func(gt_label_mask, rendered_label_mask)
+
+        results.append([robot_pos, loss])    
+        if verbose > 0:
+            sys.stdout.write("\r"+str(i+1)+" / "+str(len(all_combinations)))
+            sys.stdout.flush()
+
+    if verbose > 0:
+        print("")
+    results = np.array(results)
+    results = results[np.argsort(results[:,1])]
+    #search_robot_positions_and_loss = find_robot_pos_grid_search(gt_label_mask, verbose=1)
+    best_robot_pos = results[0,0]
+    best_loss = results[0,1]
+    if verbose > 1:
+      
+        class_id_to_color = [[0, 0, 0], [255,0,0], [0,255,0], [0,0,255], [122,122,0], [0,122,122], [122,0,122], [255,122,122], [122,255,122], [122,122,255]]
+        best_robot_view = get_robot_position_rendered_rgb_image(best_robot_pos, 110)
+        best_robot_diff = get_diff_visualisation(gt_label_mask, rgb_mask_to_label_mask(best_robot_view, class_id_to_color))
+
+        img_array = [
+          ["cmask", util.get_colored_segmentation_mask(gt_label_mask, class_id_to_color)],
+          ["cmask", util.get_colored_segmentation_mask(gt_label_mask, class_id_to_color)],
+          ["search_space", get_robot_pos_drawing_from_search_result(results)],
+
+          ["best_robot_view", best_robot_view],
+          ["best_robot_diff", util.get_colored_segmentation_mask(best_robot_diff, class_id_to_color)],
+          ["best_robot_top_view", get_robot_pos_drawing([best_robot_pos], [[0, 0, 255]])],
+        ]
+        util.get_figure_of_images(img_array, 3, 2, 7)
+        print("best loss:", best_loss)
+    return results
